@@ -20,7 +20,7 @@ def main():
     poller = zmq.Poller()
     poller.register(frontend, zmq.POLLIN)
     poller.register(backend, zmq.POLLIN)
-
+    #loop
     while True:
         events = dict(poller.poll())
         if frontend in events:

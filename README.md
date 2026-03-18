@@ -19,6 +19,7 @@ Projeto da Parte 1 de Sistemas Distribuídos, com **três linguagens** se comuni
 ## Regras do enunciado atendidas
 
 - **ZeroMQ** para troca de mensagens
+
 - **containers** com Docker Compose
 - **timestamp** em todas as mensagens
 - **serialização binária** com **MessagePack**
@@ -26,36 +27,6 @@ Projeto da Parte 1 de Sistemas Distribuídos, com **três linguagens** se comuni
 - **cada servidor mantém seu próprio banco SQLite**
 - **clientes e servidores de linguagens diferentes conversam entre si**
 
-## Estrutura
-
-```text
-bbs_multilang_project/
-├── broker/
-│   ├── broker.py
-│   └── Dockerfile
-├── python/
-│   ├── client.py
-│   ├── server.py
-│   └── Dockerfile
-├── java/
-│   ├── pom.xml
-│   ├── Dockerfile
-│   └── src/main/java/bbs/
-│       ├── Main.java
-│       ├── Util.java
-│       ├── DB.java
-│       ├── JavaServer.java
-│       └── JavaClient.java
-├── c/
-│   ├── main.c
-│   └── Dockerfile
-├── data/
-│   ├── python/
-│   ├── java/
-│   └── c/
-├── docker-compose.yml
-└── README.md
-```
 
 ## Arquitetura
 
