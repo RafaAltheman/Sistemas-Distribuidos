@@ -1,122 +1,111 @@
-# Sistema de mensagens instantâneas — Python + Java + C
+# Projeto de Sistemas Distribuídos - Parte 1
 
-Projeto da Parte 1 de Sistemas Distribuídos, com **três linguagens** se comunicando ao mesmo tempo:
+## Descrição
 
-- **Python**: cliente e servidor
-- **Java**: cliente e servidor
-- **C**: cliente e servidor
-- **Broker**: Python com ZeroMQ
+Nesta etapa, o sistema permite:
 
-## O que o projeto implementa
+- fazer login de usuário
+- listar os canais existentes
+- criar novos canais
 
-- login de usuário
+O projeto foi feito para funcionar com clientes e servidores em linguagens diferentes, usando um broker para intermediar a comunicação.
+
+---
+
+## Linguagens usadas
+
+As linguagens utilizadas no projeto foram:
+
+- Python
+- Java
+- C
+
+Temos clientes e servidores nessas linguagens, além do broker.
+
+---
+
+## O que foi implementado
+
+Nesta primeira parte foram implementadas as seguintes funcionalidades:
+
+- login de usuário usando apenas nome
 - listagem de canais
 - criação de canais
-- persistência em disco por servidor
-- replicação simples entre servidores de linguagens diferentes
-- execução com `docker compose up --build`
+- armazenamento dos dados em disco
+- replicação das informações entre os servidores
+- mensagens com timestamp
+- serialização binária
 
-## Regras do enunciado atendidas
+---
 
-- **ZeroMQ** para troca de mensagens
+## Comunicação
 
-- **containers** com Docker Compose
-- **timestamp** em todas as mensagens
-- **serialização binária** com **MessagePack**
-- **clientes e servidores mostram no terminal** todas as mensagens enviadas/recebidas
-- **cada servidor mantém seu próprio banco SQLite**
-- **clientes e servidores de linguagens diferentes conversam entre si**
+A comunicação funciona assim:
 
+### Login
+O cliente envia um pedido de login com o nome do usuário.  
+O servidor responde se deu certo ou não.
 
-## Arquitetura
+### Listar canais
+O cliente pede a lista de canais.  
+O servidor responde com os nomes dos canais já criados.
 
-### Requisições de cliente para servidor
+### Criar canal
+O cliente envia o nome do canal.  
+O servidor responde com sucesso ou erro.
 
-- cliente usa **REQ** para `broker:5555`
-- broker usa **ROUTER/DEALER** para balancear
-- servidor usa **REP** para `broker:5556`
+---
 
-Assim, qualquer cliente pode ser atendido por qualquer servidor, independente da linguagem.
+## Serialização
 
-### Replicação entre servidores
+As mensagens foram serializadas em **MessagePack**.
 
-Cada servidor:
+Escolhemos esse formato porque ele é binário, funciona em várias linguagens e atende ao que foi pedido no enunciado.
 
-- publica eventos em um socket **PUB** próprio
-- assina os sockets **SUB** dos outros servidores
-
-Eventos replicados:
-
-- `login`
-- `create_channel`
-
-## Formato das mensagens
-
-### Requisição
-
-Campos principais:
-
-- `type`
-- `operation`
-- `request_id`
-- `timestamp`
-- `user`
-- `data`
-
-### Resposta
-
-Campos principais:
-
-- `type`
-- `operation`
-- `request_id`
-- `timestamp`
-- `server_id`
-- `status`
-- `data`
-- `error`
-
-### Evento de replicação
-
-Campos principais:
-
-- `event_type`
-- `event_id`
-- `timestamp`
-- `origin_server`
-- `user`
-- `channel` (quando aplicável)
+---
 
 ## Persistência
 
-Cada servidor grava seu próprio banco SQLite em disco:
+A persistência foi feita com **SQLite**.
 
-- `logins`
-- `channels`
-- `replication_events`
+Cada servidor tem seu próprio banco de dados, ou seja, cada um salva suas informações separadamente.
 
-Pastas persistidas:
+Nesta parte, são armazenados:
 
-- `./data/python`
-- `./data/java`
-- `./data/c`
+- os logins feitos pelos usuários com timestamp
+- os canais criados
+
+---
+
+## Replicação
+
+Os servidores trocam informações entre si para que todos fiquem atualizados.
+
+Nesta etapa, são replicados:
+
+- logins
+- criação de canais
+
+Assim, um canal criado em um servidor também aparece nos outros.
+
+---
+
+## Arquivos do projeto
+
+O projeto contém:
+
+- `README.md`
+- `Dockerfile`
+- `docker-compose.yml`
+- código dos clientes
+- código dos servidores
+- código do broker
+
+---
 
 ## Como executar
 
-Na raiz do projeto:
+Para rodar o projeto, basta usar o comando:
 
 ```bash
 docker compose up --build
-```
-
-## Fluxo esperado na demonstração
-
-- `client_python` faz login e cria `geral`
-- `client_java` faz login e cria `java_room`
-- `client_c` faz login e cria `c_room`
-- os servidores replicam os eventos
-- qualquer servidor pode listar todos os canais já replicados
-
-## Observação importante
-
-A parte em **C** foi implementada para conversar com Python e Java usando o mesmo protocolo MessagePack e SQLite. O ponto mais sensível costuma ser a build de dependências nativas no ambiente Docker. Se alguma imagem falhar no `docker compose up --build`, o ajuste mais provável será somente de pacote/compilação do container C.
