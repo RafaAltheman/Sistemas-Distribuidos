@@ -6,13 +6,61 @@
 #include <time.h>
 #include <unistd.h>
 
+void print_msgpack(msgpack_object obj) {
+    if (obj.type == MSGPACK_OBJECT_MAP) {
+        printf("{ ");
+
+        for (int i = 0; i < obj.via.map.size; i++) {
+            msgpack_object_kv *kv = &obj.via.map.ptr[i];
+
+            printf("%.*s: ",
+                kv->key.via.str.size,
+                kv->key.via.str.ptr
+            );
+
+            if (kv->val.type == MSGPACK_OBJECT_STR) {
+                printf("%.*s",
+                    kv->val.via.str.size,
+                    kv->val.via.str.ptr
+                );
+            } else if (kv->val.type == MSGPACK_OBJECT_ARRAY) {
+                printf("[ ");
+                for (int j = 0; j < kv->val.via.array.size; j++) {
+                    msgpack_object item = kv->val.via.array.ptr[j];
+                    printf("%.*s ",
+                        item.via.str.size,
+                        item.via.str.ptr
+                    );
+                }
+                printf("]");
+            } else if (kv->val.type == MSGPACK_OBJECT_FLOAT64) {
+                printf("%f", kv->val.via.f64);
+            }
+
+            printf(", ");
+        }
+
+        printf("}\n");
+    }
+}
+
 void send_request(void *socket, msgpack_sbuffer *sbuf) {
     zmq_send(socket, sbuf->data, sbuf->size, 0);
 
     char buffer[4096];
     int size = zmq_recv(socket, buffer, sizeof(buffer), 0);
 
-    printf("[RESPONSE] %.*s\n", size, buffer);
+    msgpack_unpacked msg;
+    msgpack_unpacked_init(&msg);
+
+    if (msgpack_unpack_next(&msg, buffer, size, NULL)) {
+        printf("[CLIENT RECEBEU] ");
+        print_msgpack(msg.data);
+    } else {
+        printf("[ERRO] Falha ao decodificar resposta\n");
+    }
+
+    msgpack_unpacked_destroy(&msg);
 }
 
 int main() {
@@ -90,7 +138,7 @@ int main() {
         send_request(socket, &sbuf);
         msgpack_sbuffer_destroy(&sbuf);
 
-        usleep(600000);
+        usleep(700000);
     }
 
     zmq_close(socket);

@@ -1,11 +1,13 @@
-FROM maven:3.9.9-eclipse-temurin-17 AS build
-WORKDIR /app
-COPY pom.xml ./
-COPY src ./src
-RUN mvn -q -DskipTests package
+FROM eclipse-temurin:17
 
-FROM eclipse-temurin:17-jre
 WORKDIR /app
-COPY --from=build /app/target/bbs-java-1.0.0-jar-with-dependencies.jar /app/app.jar
-RUN mkdir -p /app/data
-CMD ["java", "-jar", "/app/app.jar"]
+
+COPY . .
+
+RUN apt-get update && apt-get install -y wget && \
+    wget https://repo1.maven.org/maven2/org/zeromq/jeromq/0.5.2/jeromq-0.5.2.jar && \
+    wget https://repo1.maven.org/maven2/org/msgpack/msgpack-core/0.9.0/msgpack-core-0.9.0.jar
+
+RUN javac -cp ".:jeromq-0.5.2.jar:msgpack-core-0.9.0.jar" Client.java Server.java
+
+CMD ["java", "-cp", ".:jeromq-0.5.2.jar:msgpack-core-0.9.0.jar", "Client"]

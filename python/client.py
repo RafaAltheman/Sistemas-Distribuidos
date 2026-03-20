@@ -44,4 +44,4 @@ while True:
     })
     print("[LIST CHANNELS]", resp)
 
-    time.sleep(0.6)
+    time.sleep(0.2)
